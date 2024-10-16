@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id      Int     @id @default(autoincrement())
+  name    String
+  country String
+  money   Decimal @default(0) @db.Decimal(10, 2)
+}
