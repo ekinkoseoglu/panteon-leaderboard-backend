@@ -1,12 +1,12 @@
-// import { Module } from '@nestjs/common';
-// import { RedisModule } from '@nestjs-modules/ioredis';
-// import { LeaderboardService } from '../Concrete/leaderboard.service';
-// import { LeaderboardController } from 'src/Http/Controllers/leaderboard.controller';
-// import { PlayerModule } from './player.module';
+import { Module } from '@nestjs/common';
+import { PrismaService } from 'src/DataAccess/prisma.service';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { LeaderboardService } from '../Concrete/leaderboard.service';
+import { LeaderboardController } from 'src/Http/Controllers/leaderboard.controller';
 
-// @Module({
-//   imports: [RedisModule, PlayerModule],
-//   controllers: [LeaderboardController],
-//   providers: [LeaderboardService],
-// })
-// export class LeaderboardModule {}
+@Module({
+  imports: [RedisModule],
+  controllers: [LeaderboardController],
+  providers: [LeaderboardService, PrismaService],
+})
+export class LeaderboardModule {}

@@ -1,4 +1,6 @@
-import { Injectable, Delete } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Injectable, Delete, Inject } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import { PrismaService } from 'src/DataAccess/prisma.service';
 
 @Injectable()

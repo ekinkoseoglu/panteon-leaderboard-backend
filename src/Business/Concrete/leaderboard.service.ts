@@ -1,108 +1,210 @@
-// import { CACHE_MANAGER } from '@nestjs/cache-manager';
-// import { Inject, Injectable } from '@nestjs/common';
-// import { Cache } from 'cache-manager';
-// import { PrismaService } from 'src/DataAccess/prisma.service';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import Redis from 'ioredis';
+import { PrismaService } from 'src/DataAccess/prisma.service';
 
-// @Injectable()
-// export class LeaderboardService {
-//   private leaderboardKey = 'game_leaderboard';
-//   private prizePool = 0;
+@Injectable()
+export class LeaderboardService implements OnModuleInit {
+  private prizePool = 0;
+  private leaderboardKey = 'game_leaderboard';
+  private cacheExpiration = 60 * 60; // 1 saat
 
-//   constructor(
-//     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-//     private readonly prisma: PrismaService,
-//   ) {}
+  constructor(
+    @InjectRedis() private readonly redisClient: Redis,
+    private readonly prisma: PrismaService,
+  ) {}
 
-//   async getLeaderboard(playerId?: number): Promise<any> {
-//     // Get top 100 players from the leaderboard
-//     const topPlayers = await this.cacheManager.store.zRevRangeWithScores(
-//       this.leaderboardKey,
-//       0,
-//       99,
-//     );
+  async onModuleInit() {
+    await this.loadPlayersIntoRedis();
+  }
 
-//     // Fetch surrounding players if playerId is provided
-//     if (playerId) {
-//       const playerRank = await this.cacheManager.store.zRevRank(
-//         this.leaderboardKey,
-//         playerId.toString(),
-//       );
+  async loadPlayersIntoRedis(): Promise<void> {
+    // Veri cache'de mevcutsa, yeniden yüklemeyi geç.
+    const isCacheValid = await this.redisClient.exists(this.leaderboardKey);
 
-//       if (playerRank !== null) {
-//         // Get 3 players above and 2 players below the searched player
-//         const start = Math.max(playerRank - 3, 0);
-//         const end = Math.min(
-//           playerRank + 2,
-//           (await this.cacheManager.store.zCard(this.leaderboardKey)) - 1,
-//         );
+    if (isCacheValid) {
+      console.log('Cache is valid, skipping data load.');
+      return;
+    }
 
-//         const surroundingPlayers =
-//           await this.cacheManager.store.zRevRangeWithScores(
-//             this.leaderboardKey,
-//             start,
-//             end,
-//           );
-//         return {
-//           topPlayers: await this.getPlayerDetails(topPlayers),
-//           surroundingPlayers: await this.getPlayerDetails(surroundingPlayers),
-//           playerRank: playerRank + 1, // 1-based rank
-//         };
-//       }
-//     }
+    // Mevcut cache'i temizle
+    await this.clearLeaderboard();
 
-//     // Return only top 100 players if no playerId is provided
-//     return {
-//       topPlayers: await this.getPlayerDetails(topPlayers),
-//     };
-//   }
+    // Fetch the top 100 players from the database ordered by money, descending
+    const topPlayers = await this.prisma.player.findMany({
+      orderBy: {
+        money: 'desc',
+      },
+      take: 150,
+    });
 
-//   async distributePrizePool(): Promise<void> {
-//     const top100 = await this.cacheManager.store.zRevRangeWithScores(
-//       this.leaderboardKey,
-//       0,
-//       99,
-//     );
+    //console.log('Top players:', topPlayers);
 
-//     if (top100.length === 0) return;
+    // Load each player into the leaderboard (Redis)
+    for (const player of topPlayers) {
+      await this.redisClient.zadd(
+        this.leaderboardKey,
+        player.money.toString(),
+        player.id.toString(),
+      );
+    }
 
-//     const prizeDistribution = {
-//       1: 0.2, // 1st player gets 20%
-//       2: 0.15, // 2nd player gets 15%
-//       3: 0.1, // 3rd player gets 10%
-//     };
+    // Cache süresini ayarla
+    await this.redisClient.expire(this.leaderboardKey, this.cacheExpiration);
+  }
 
-//     const remainingPrize = this.prizePool * 0.55; // 55% of the pool for players ranked 4th to 100th
-//     const totalRemainingPlayers = top100.length - 3;
+  async clearLeaderboard(): Promise<void> {
+    await this.redisClient.del(this.leaderboardKey);
+  }
 
-//     for (let i = 0; i < top100.length; i++) {
-//       const playerId = parseInt(top100[i].value);
-//       let prize = 0;
+  async addPlayerToLeaderboard(playerId: number, money: number): Promise<void> {
+    await this.redisClient.zadd(
+      this.leaderboardKey,
+      money.toString(),
+      playerId.toString(),
+    );
+    this.prizePool += money * 0.02;
+  }
 
-//       if (i === 0) {
-//         prize = this.prizePool * prizeDistribution[1];
-//       } else if (i === 1) {
-//         prize = this.prizePool * prizeDistribution[2];
-//       } else if (i === 2) {
-//         prize = this.prizePool * prizeDistribution[3];
-//       } else {
-//         prize = remainingPrize / totalRemainingPlayers;
-//       }
+  async getLeaderboard(playerId?: number) {
+    const topPlayers = await this.redisClient.zrevrange(
+      this.leaderboardKey,
+      0,
+      99,
+      'WITHSCORES',
+    );
 
-//       // Update the player's money in the database
-//       await this.prisma.player.update({
-//         where: { id: playerId },
-//         data: { money: { increment: prize } },
-//       });
-//     }
+    //console.log('Top players:', topPlayers);
 
-//     // Reset the prize pool
-//     this.prizePool = 0;
+    if (playerId) {
+      const playerRank = await this.redisClient.zrevrank(
+        this.leaderboardKey,
+        playerId.toString(),
+      );
 
-//     // Reset the leaderboard after distribution
-//     await this.resetLeaderboard();
-//   }
+      if (playerRank !== null) {
+        const start = Math.max(playerRank - 3, 0);
+        const end = Math.min(
+          playerRank + 2,
+          (await this.redisClient.zcard(this.leaderboardKey)) - 1,
+        );
 
-//   async resetLeaderboard(): Promise<void> {
-//     await this.cacheManager.store.del(this.leaderboardKey);
-//   }
-// }
+        const surroundingPlayers = await this.redisClient.zrevrange(
+          this.leaderboardKey,
+          start,
+          end,
+          'WITHSCORES',
+        );
+        return {
+          topPlayers: await this.getPlayerDetails(topPlayers),
+          surroundingPlayers: await this.getPlayerDetails(surroundingPlayers),
+          playerRank: playerRank + 1,
+        };
+      }
+    }
+
+    return {
+      topPlayers: await this.getPlayerDetails(topPlayers),
+    };
+  }
+
+  async distributePrizePool(): Promise<void> {
+    const top100 = await this.redisClient.zrevrange(
+      this.leaderboardKey,
+      0,
+      99,
+      'WITHSCORES',
+    );
+    const totalPlayers = top100.length / 2;
+
+    if (totalPlayers === 0) return;
+
+    const topPlayerIds = top100
+      .filter((_, i) => i % 2 === 0)
+      .map((id) => parseInt(id));
+    const topPlayers = await this.prisma.player.findMany({
+      where: { id: { in: topPlayerIds } },
+    });
+
+    console.log('Top players:', topPlayers);
+
+    const prizeDistribution = {
+      1: 0.2,
+      2: 0.15,
+      3: 0.1,
+    };
+
+    const remainingPrize = this.prizePool * 0.55;
+
+    for (let i = 0; i < topPlayers.length; i++) {
+      let prize =
+        i === 0
+          ? this.prizePool * prizeDistribution[1]
+          : i === 1
+            ? this.prizePool * prizeDistribution[2]
+            : i === 2
+              ? this.prizePool * prizeDistribution[3]
+              : remainingPrize / (totalPlayers - 3);
+
+      await this.prisma.player.update({
+        where: { id: topPlayers[i].id },
+        data: { money: topPlayers[i].money + prize },
+      });
+
+      //      console.log(topPlayers[0].name, 'won', prize);
+    }
+
+    this.prizePool = 0;
+    await this.resetLeaderboard();
+  }
+
+  async resetLeaderboard(): Promise<void> {
+    await this.redisClient.del(this.leaderboardKey);
+  }
+
+  private async getPlayerDetails(
+    players: string[],
+    surroundingPlayers: string[] = [],
+  ) {
+    const topPlayerIds = players
+      .filter((_, i) => i % 2 === 0)
+      .map((id) => parseInt(id));
+    const surroundingPlayerIds = surroundingPlayers
+      .filter((_, i) => i % 2 === 0)
+      .map((id) => parseInt(id));
+
+    console.log('Top player ids:', topPlayerIds);
+    // console.log('Surrounding player ids:', surroundingPlayerIds);
+
+    const topPlayerDetails: any[] = [];
+
+    for (let i = 0; i < topPlayerIds.length; i++) {
+      const player = await this.prisma.player.findUnique({
+        where: { id: topPlayerIds[i] },
+      });
+      topPlayerDetails.push(player);
+    }
+
+    // console.log(topPlayerDetails);
+
+    const surroundingPlayerDetails =
+      surroundingPlayerIds.length > 0
+        ? await this.prisma.player.findMany({
+            where: { id: { in: surroundingPlayerIds } },
+          })
+        : [];
+
+    return {
+      topPlayers: topPlayerDetails.map((player, index) => ({
+        ...player,
+        rank: index + 1,
+        money: players[index * 2 + 1],
+      })),
+      surroundingPlayers: surroundingPlayerDetails.map((player, index) => ({
+        ...player,
+        rank: topPlayerIds.length + index + 1,
+        money: surroundingPlayers[index * 2 + 1],
+      })),
+    };
+  }
+}
