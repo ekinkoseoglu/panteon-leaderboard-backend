@@ -7,7 +7,7 @@ export class LeaderboardController {
 
   @Get()
   async getLeaderboard(@Query('playerId') playerId?: number) {
-    // await this.leaderboardService.loadPlayersIntoRedis();
+    await this.leaderboardService.loadPlayersIntoRedis();
     return this.leaderboardService.getLeaderboard(playerId);
   }
 

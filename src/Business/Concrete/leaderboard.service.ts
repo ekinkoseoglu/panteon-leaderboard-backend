@@ -60,10 +60,11 @@ export class LeaderboardService implements ILeaderboardService, OnModuleInit {
   async getLeaderboard(playerId?: number) {
     console.log('Getting leaderboard');
 
+    //Get All players, not just top 100
     const topPlayers = await this.redisClient.zrevrange(
       this.leaderboardKey,
       0,
-      99,
+      -1,
       'WITHSCORES',
     );
 
