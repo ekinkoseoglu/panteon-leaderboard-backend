@@ -1,16 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { IEntity } from '../Abstract/entity.interface';
 
-@Entity()
-export class Player {
-  @PrimaryGeneratedColumn()
+export class Player implements IEntity {
   id: number;
-
-  @Column()
   name: string;
-
-  @Column()
   country: string;
-
-  @Column()
   money: number;
 }

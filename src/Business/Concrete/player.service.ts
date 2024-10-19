@@ -1,6 +1,4 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Injectable, Delete, Inject } from '@nestjs/common';
-import { Cache } from 'cache-manager';
 import { PrismaService } from 'src/DataAccess/prisma.service';
 
 @Injectable()
@@ -21,12 +19,12 @@ export class PlayerService {
     });
   }
 
-  async create(name: string, country: string) {
+  async create(name: string, country: string, money?: number) {
     return this.prisma.player.create({
       data: {
         name,
         country,
-        money: 0,
+        money,
       },
     });
   }

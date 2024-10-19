@@ -6,8 +6,8 @@ export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
 
   @Post()
-  create(@Body() body: { name: string; country: string }) {
-    return this.playerService.create(body.name, body.country);
+  create(@Body() body: { name: string; country: string; money?: number }) {
+    return this.playerService.create(body.name, body.country, body.money);
   }
 
   @Get('getall')

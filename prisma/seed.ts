@@ -14,8 +14,6 @@ async function main() {
       money: faker.number.int({ min: 0, max: 10000 }),
     }));
 
-    console.log(players);
-
     await prisma.player.createMany({
       data: players,
       skipDuplicates: true, // Tekrarlanan data varsa sil.

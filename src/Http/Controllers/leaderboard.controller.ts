@@ -11,6 +11,11 @@ export class LeaderboardController {
     return this.leaderboardService.getLeaderboard(playerId);
   }
 
+  @Get('nextWeek')
+  async nextWeek() {
+    return this.leaderboardService.getPrizePool();
+  }
+
   @Post('distributePrizePool')
   async distributePrizePool() {
     await this.leaderboardService.distributePrizePool();

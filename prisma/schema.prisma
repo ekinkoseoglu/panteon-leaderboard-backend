@@ -1,16 +1,16 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+    provider = "mysql"
+    url      = env("DATABASE_URL")
 }
 
 model Player {
-  id      Int    @id @default(autoincrement())
-  name    String
-  country String
-  money   Int    @default(0)
+    id      Int    @id @default(autoincrement())
+    name    String
+    country String
+    money   Int    @default(0)
 }
