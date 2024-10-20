@@ -148,10 +148,145 @@ npm run start
 Uygulama, `http://localhost:3000` adresinde çalışacaktır.
 
 
-## Kullanım
+## Kullanım ve APIlar
 
 
 - REST API'leri kullanmak için [Postman](https://www.postman.com/) veya benzeri bir araç kullanabilirsiniz.
+  Postman Koleksiyonu aşağıdaki gibidir.
+```
+{
+	"info": {
+		"_postman_id": "a64a8eda-1f91-4367-9d9e-92f809aa3977",
+		"name": "Panteon Case",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "31888251"
+	},
+	"item": [
+		{
+			"name": "Search Player By ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/leaderboard?playerId=136",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"leaderboard"
+					],
+					"query": [
+						{
+							"key": "playerId",
+							"value": "136"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Leaderboard",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/leaderboard",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"leaderboard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "NextWeek",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/leaderboard/nextWeek",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"leaderboard",
+						"nextWeek"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Records on Redis",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/leaderboard/load-players",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"leaderboard",
+						"load-players"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Distribute Prize",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/leaderboard/load-players",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"leaderboard",
+						"load-players"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
+```
 - Tarayıcı üzerinden `http://localhost:3000` adresine giderek uygulamanızı test edebilirsiniz.
 
 
