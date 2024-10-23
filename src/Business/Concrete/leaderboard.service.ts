@@ -36,7 +36,7 @@ export class LeaderboardService implements ILeaderboardService, OnModuleInit {
       orderBy: {
         money: 'desc',
       },
-      take: 1000,
+      take: 100,
     });
 
     // Redis'e oyuncuları ekle

@@ -17,10 +17,20 @@ import { PlayerModule } from './Business/Modules/player.module';
     LeaderboardModule,
     RedisModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'single',
-        url: process.env.REDIS_URL,
-      }),
+      useFactory: (configService: ConfigService) => {
+        const redisUrl = configService.get<string>('REDIS_URL');
+        const redisPassword = configService.get<string>('REDIS_PASSWORD');
+        console.log('Connecting to Redis with URL:', redisUrl);
+        return {
+          type: 'single',
+          url: redisUrl,
+          options: {
+            // host: 'redis-15964.c311.eu-central-1-1.ec2.redns.redis-cloud.com',
+            // port: 15964,
+            password: redisPassword,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
   ],
