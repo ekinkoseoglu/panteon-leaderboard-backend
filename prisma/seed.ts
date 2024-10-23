@@ -4,8 +4,8 @@ import { faker } from '@faker-js/faker';
 const prisma = new PrismaClient();
 
 async function main() {
-  const batchSize = 1000;
-  const totalPlayers = 1000000;
+  const batchSize = 100;
+  const totalPlayers = 10000;
 
   for (let i = 0; i < totalPlayers / batchSize; i++) {
     const players = Array.from({ length: batchSize }).map(() => ({
