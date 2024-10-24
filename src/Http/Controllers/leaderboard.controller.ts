@@ -6,9 +6,13 @@ export class LeaderboardController {
   constructor(private readonly leaderboardService: LeaderboardService) {}
 
   @Get()
-  async getLeaderboard(@Query('playerId') playerId?: number) {
+  async getLeaderboard(
+    @Query('playerId') playerId?: number,
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 100,
+  ) {
     await this.leaderboardService.loadPlayersIntoRedis();
-    return this.leaderboardService.getLeaderboard(playerId);
+    return this.leaderboardService.getLeaderboard(playerId, page, pageSize);
   }
 
   @Get('nextWeek')
