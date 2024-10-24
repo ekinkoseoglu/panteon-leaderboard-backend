@@ -73,7 +73,7 @@ export class LeaderboardService implements ILeaderboardService, OnModuleInit {
           Math.max(playerRank - 2, 0),
           Math.min(
             playerRank + 2,
-            (await this.redisClient.zcard(this.leaderboardKey)) - 1,
+            (await this.redisClient.zcard(this.leaderboardKey)) - 2,
           ),
           'WITHSCORES',
         );
@@ -96,8 +96,8 @@ export class LeaderboardService implements ILeaderboardService, OnModuleInit {
           });
           const surroundingPlayers = await this.prisma.player.findMany({
             orderBy: { money: 'desc' },
-            skip: Math.max(rank - 3, 0),
-            take: 5,
+            skip: Math.max(rank - 4, 0),
+            take: 6,
           });
           const playerRankInfo = surroundingPlayers.map((player, index) => ({
             ...player,
