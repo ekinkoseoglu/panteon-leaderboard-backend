@@ -96,7 +96,7 @@ export class LeaderboardService implements ILeaderboardService, OnModuleInit {
           });
           const surroundingPlayers = await this.prisma.player.findMany({
             orderBy: { money: 'desc' },
-            skip: Math.max(rank - 4, 0),
+            skip: Math.max(rank - 5, 0),
             take: 6,
           });
           const playerRankInfo = surroundingPlayers.map((player, index) => ({
