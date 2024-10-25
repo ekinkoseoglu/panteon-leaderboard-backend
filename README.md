@@ -14,6 +14,9 @@ Bu proje, oyun içi liderlik tablosu (Leaderboard) sistemini yönetmek için gel
 - [MySQL](https://www.mysql.com/)
 - [Redis](https://redis.io/)
 
+- **Ek olarak dataları test etmek için gerekli kullanıcıların SQL verisini de buradan indirebilirsiniz:**
+[Leaderboard.sql](https://drive.google.com/file/d/1XG3VUax0OFHE_LnYGf1c_PrI8hoa9_6Q/view)
+
 ## Kullanım ve APIlar
 
 REST API'leri kullanmak için [Postman](https://www.postman.com/) veya benzeri bir araç kullanabilirsiniz. Postman Koleksiyonu aşağıdaki gibidir:
