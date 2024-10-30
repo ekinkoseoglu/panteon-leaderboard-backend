@@ -97,12 +97,33 @@ export class LeaderboardService implements ILeaderboardService, OnModuleInit {
           const surroundingPlayers = await this.prisma.player.findMany({
             orderBy: { money: 'desc' },
             skip: Math.max(rank - 5, 0),
-            take: 6,
+            take: 5,
           });
+
+          const selectedPlayer = {
+            id: player.id,
+            name: player.name,
+            country: player.country,
+            money: player.money,
+            rank,
+          };
+
+          console.log(selectedPlayer);
+
           const playerRankInfo = surroundingPlayers.map((player, index) => ({
             ...player,
             rank: rank + index - 2,
           }));
+
+          playerRankInfo.splice(3, 0, selectedPlayer);
+
+          const updatedRank = rank - 3;
+          playerRankInfo.forEach((player, index) => {
+            player.rank = updatedRank + index;
+          });
+
+          console.log(playerRankInfo);
+
           return {
             topPlayers: await this.getPlayerDetails(topPlayers, start),
             surroundingPlayers: playerRankInfo,
